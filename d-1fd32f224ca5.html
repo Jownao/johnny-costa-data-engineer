@@ -184,8 +184,15 @@
     }
 
 
-    .open-btn {
+    .btn-row {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 12px;
       margin-top: 26px;
+    }
+
+    .open-btn {
       background: linear-gradient(135deg, #ff6b9d 0%, #ff8fab 100%);
       color: #fff;
       border: 0;
@@ -286,7 +293,10 @@
       <div class="bar"><div id="milestoneBar"></div></div>
     </div>
 
-    <button class="open-btn" id="openBtn">📅 Nossos momentos</button>
+    <div class="btn-row">
+      <button class="open-btn" id="openBtn">📅 Nossos momentos</button>
+      <button class="open-btn" id="bdayBtn">🎂 Aniversários</button>
+    </div>
 
     <p class="footer">O tempo passa, e cada dia conta ✨</p>
   </main>
@@ -297,6 +307,14 @@
       <button class="close-btn" id="closeBtn" aria-label="Fechar">✕</button>
     </div>
     <ul class="timeline" id="timeline"></ul>
+  </dialog>
+
+  <dialog id="bdayDlg">
+    <div class="dlg-head">
+      <h2>Aniversários</h2>
+      <button class="close-btn" id="bdayCloseBtn" aria-label="Fechar">✕</button>
+    </div>
+    <ul class="timeline" id="bdayList"></ul>
   </dialog>
 
   <script>
@@ -340,16 +358,21 @@
     const MOMENTS = [
       [2026, 9, 6,  '💬', 'Começamos a nos falar'],
       [2026, 9, 8,  '👀', 'Nos vimos pela primeira vez'],
+      [2026, 9, 11, '🎁', 'Primeiro presente que dei pra ela'],
       [2026, 9, 22, '💋', 'Nosso primeiro beijo'],
       // Ideias pra preencher:
       // [2026, 9, 0, '🍽️', 'Primeiro encontro / jantar'],
       // [2026, 9, 0, '🤝', 'Primeira vez de mãos dadas'],
       // [2026, 9, 0, '📸', 'Primeira foto juntos'],
       // [2026, 9, 0, '🎬', 'Primeiro cinema'],
-      // [2026, 9, 0, '🎁', 'Primeiro presente'],
       // [2026, 9, 0, '💕', 'Começamos a namorar'],
       // [2026, 9, 0, '🥰', 'Primeiro "eu te amo"'],
-      // [2026, 9, 0, '🎂', 'Aniversário dela'],
+    ];
+
+    // Aniversários (repetem todo ano): [mês (1-12), dia, emoji, 'nome']
+    const BIRTHDAYS = [
+      [8, 14, '🎂', 'Aniversário da Micaele'],
+      [3, 2,  '🎈', 'Aniversário do Johnny'],
     ];
 
     const MONTHS = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
@@ -372,7 +395,30 @@
         }).join('');
     }
 
+    function renderBirthdays() {
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      $('bdayList').innerHTML = BIRTHDAYS
+        .map(([m, d, icon, title]) => {
+          let next = new Date(today.getFullYear(), m - 1, d);
+          if (next < today) next = new Date(today.getFullYear() + 1, m - 1, d);
+          return { m, d, icon, title, left: Math.round((next - today) / 86400000) };
+        })
+        .sort((a, b) => a.left - b.left)
+        .map(({ m, d, icon, title, left }) => {
+          const num = left === 0 ? '🎉' : left;
+          const label = left === 0 ? 'hoje' : left === 1 ? 'dia pra chegar' : 'dias pra chegar';
+          return `<li><span class="tl-icon">${icon}</span>
+            <div class="tl-info"><div class="tl-title">${title}</div><div class="tl-date">${d} de ${MONTHS[m - 1]}</div></div>
+            <div class="tl-days"><strong>${num}</strong><span>${label}</span></div></li>`;
+        }).join('');
+    }
+
     const dlg = $('momentsDlg');
+    const bdayDlg = $('bdayDlg');
+    $('bdayBtn').addEventListener('click', () => { renderBirthdays(); bdayDlg.showModal(); });
+    $('bdayCloseBtn').addEventListener('click', () => bdayDlg.close());
+    bdayDlg.addEventListener('click', (e) => { if (e.target === bdayDlg) bdayDlg.close(); });
     $('openBtn').addEventListener('click', () => { renderMoments(); dlg.showModal(); });
     $('closeBtn').addEventListener('click', () => dlg.close());
     dlg.addEventListener('click', (e) => { if (e.target === dlg) dlg.close(); });
@@ -381,7 +427,7 @@
     function scheduleMidnight() {
       const now = new Date();
       const next = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 1);
-      setTimeout(() => { render(); if (dlg.open) renderMoments(); scheduleMidnight(); }, next - now);
+      setTimeout(() => { render(); if (dlg.open) renderMoments(); if (bdayDlg.open) renderBirthdays(); scheduleMidnight(); }, next - now);
     }
 
     render();
