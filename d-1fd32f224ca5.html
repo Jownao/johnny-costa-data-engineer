@@ -183,6 +183,80 @@
       color: rgba(255, 192, 217, 0.6);
     }
 
+
+    .open-btn {
+      margin-top: 26px;
+      background: linear-gradient(135deg, #ff6b9d 0%, #ff8fab 100%);
+      color: #fff;
+      border: 0;
+      border-radius: 99px;
+      padding: 14px 28px;
+      font: 500 1rem 'Outfit', sans-serif;
+      cursor: pointer;
+      box-shadow: 0 8px 24px rgba(255, 107, 157, 0.35);
+      transition: transform 0.2s;
+    }
+    .open-btn:hover { transform: translateY(-2px); }
+
+    dialog {
+      margin: auto;
+      width: min(92vw, 480px);
+      max-height: 85vh;
+      background: #2a1a48;
+      color: #fff;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 26px;
+      padding: 0;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+      overflow: hidden;
+    }
+    dialog[open] { display: flex; flex-direction: column; animation: slideUp 0.35s ease-out; }
+    dialog::backdrop { background: rgba(10, 5, 20, 0.7); backdrop-filter: blur(4px); }
+
+    .dlg-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 22px 26px 12px;
+    }
+    .dlg-head h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.5rem;
+      color: #ff8fab;
+    }
+    .close-btn {
+      background: rgba(255, 255, 255, 0.08);
+      border: 0;
+      color: #fff;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      font-size: 1.1rem;
+      cursor: pointer;
+    }
+
+    .timeline {
+      list-style: none;
+      overflow-y: auto;
+      padding: 8px 26px 26px;
+    }
+    .timeline li {
+      display: flex;
+      gap: 14px;
+      align-items: center;
+      padding: 14px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+      text-align: left;
+    }
+    .timeline li:last-child { border-bottom: 0; }
+    .tl-icon { font-size: 1.7rem; }
+    .tl-info { flex: 1; }
+    .tl-title { font-weight: 500; }
+    .tl-date { font-size: 0.8rem; color: #ffc0d9; margin-top: 2px; }
+    .tl-days { text-align: right; white-space: nowrap; }
+    .tl-days strong { display: block; font-size: 1.5rem; color: #fff; line-height: 1; }
+    .tl-days span { font-size: 0.7rem; color: #ff8fab; text-transform: uppercase; letter-spacing: 1px; }
+
     @media (max-width: 480px) {
       .container { padding: 40px 20px; }
       .big-number { font-size: 5.5rem; }
@@ -212,8 +286,18 @@
       <div class="bar"><div id="milestoneBar"></div></div>
     </div>
 
+    <button class="open-btn" id="openBtn">📅 Nossos momentos</button>
+
     <p class="footer">O tempo passa, e cada dia conta ✨</p>
   </main>
+
+  <dialog id="momentsDlg">
+    <div class="dlg-head">
+      <h2>Nossos momentos</h2>
+      <button class="close-btn" id="closeBtn" aria-label="Fechar">✕</button>
+    </div>
+    <ul class="timeline" id="timeline"></ul>
+  </dialog>
 
   <script>
     // Data em que se conheceram (ano, mês [0-11], dia) — no horário local.
@@ -251,11 +335,53 @@
       }
     }
 
+    // Momentos marcantes. Para adicionar um novo, é só incluir uma linha aqui:
+    // [ano, mês (1-12), dia, emoji, 'descrição']
+    const MOMENTS = [
+      [2026, 9, 6,  '💬', 'Começamos a nos falar'],
+      [2026, 9, 8,  '👀', 'Nos vimos pela primeira vez'],
+      [2026, 9, 22, '💋', 'Nosso primeiro beijo'],
+      // Ideias pra preencher:
+      // [2026, 9, 0, '🍽️', 'Primeiro encontro / jantar'],
+      // [2026, 9, 0, '🤝', 'Primeira vez de mãos dadas'],
+      // [2026, 9, 0, '📸', 'Primeira foto juntos'],
+      // [2026, 9, 0, '🎬', 'Primeiro cinema'],
+      // [2026, 9, 0, '🎁', 'Primeiro presente'],
+      // [2026, 9, 0, '💕', 'Começamos a namorar'],
+      // [2026, 9, 0, '🥰', 'Primeiro "eu te amo"'],
+      // [2026, 9, 0, '🎂', 'Aniversário dela'],
+    ];
+
+    const MONTHS = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+
+    function renderMoments() {
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      $('timeline').innerHTML = MOMENTS
+        .map(([y, m, d, icon, title]) => ({ date: new Date(y, m - 1, d), icon, title }))
+        .sort((a, b) => a.date - b.date)
+        .map(({ date, icon, title }) => {
+          const diff = Math.round((today - date) / 86400000);
+          const abs = Math.abs(diff);
+          let num = abs, label = diff < 0 ? (abs === 1 ? 'dia pra chegar' : 'dias pra chegar') : (abs === 1 ? 'dia' : 'dias');
+          if (diff === 0) { num = '🎉'; label = 'hoje'; }
+          const when = `${date.getDate()} de ${MONTHS[date.getMonth()]} de ${date.getFullYear()}`;
+          return `<li><span class="tl-icon">${icon}</span>
+            <div class="tl-info"><div class="tl-title">${title}</div><div class="tl-date">${when}</div></div>
+            <div class="tl-days"><strong>${num}</strong><span>${label}</span></div></li>`;
+        }).join('');
+    }
+
+    const dlg = $('momentsDlg');
+    $('openBtn').addEventListener('click', () => { renderMoments(); dlg.showModal(); });
+    $('closeBtn').addEventListener('click', () => dlg.close());
+    dlg.addEventListener('click', (e) => { if (e.target === dlg) dlg.close(); });
+
     // Atualiza sozinho à meia-noite (e a cada minuto, cobre a aba aberta/suspensa)
     function scheduleMidnight() {
       const now = new Date();
       const next = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 1);
-      setTimeout(() => { render(); scheduleMidnight(); }, next - now);
+      setTimeout(() => { render(); if (dlg.open) renderMoments(); scheduleMidnight(); }, next - now);
     }
 
     render();
