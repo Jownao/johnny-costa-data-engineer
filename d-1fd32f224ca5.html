@@ -183,36 +183,6 @@
       color: rgba(255, 192, 217, 0.6);
     }
 
-    .countdown {
-      margin-top: 30px;
-      background: linear-gradient(135deg, rgba(255, 107, 157, 0.15), rgba(255, 143, 171, 0.05));
-      border: 1px solid rgba(255, 107, 157, 0.3);
-      border-radius: 20px;
-      padding: 22px;
-    }
-
-    .countdown-label {
-      font-size: 0.8rem;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      color: #ff8fab;
-    }
-
-    .countdown-number {
-      font-family: 'Playfair Display', serif;
-      font-size: 3.2rem;
-      font-weight: 900;
-      line-height: 1.1;
-      margin-top: 4px;
-    }
-
-    .countdown-sub {
-      font-size: 0.85rem;
-      color: #e8d5e8;
-      margin-top: 4px;
-    }
-
-
     .btn-row {
       display: flex;
       flex-wrap: wrap;
@@ -322,12 +292,6 @@
       <div class="bar"><div id="milestoneBar"></div></div>
     </div>
 
-    <div class="countdown">
-      <div class="countdown-label">Contagem regressiva</div>
-      <div class="countdown-number" id="countdownNumber">0</div>
-      <div class="countdown-sub" id="countdownSub"></div>
-    </div>
-
     <div class="btn-row">
       <button class="open-btn" id="openBtn">📅 Nossos momentos</button>
       <button class="open-btn" id="bdayBtn">🎂 Aniversários</button>
@@ -358,9 +322,6 @@
 
     const MILESTONES = [7, 10, 15, 20, 30, 50, 60, 90, 100, 150, 200, 250, 300, 365, 500, 730, 1000];
 
-    // Data-alvo combinada por vocês: 90 dias a partir de 06/09/2026.
-    const GOAL = new Date(2026, 11, 5);
-
     const $ = (id) => document.getElementById(id);
 
     function daysSince() {
@@ -371,7 +332,6 @@
     }
 
     function render() {
-      const now = new Date();
       const d = daysSince();
       $('days').textContent = d;
       $('daysLabel').textContent = d === 1 ? 'dia' : 'dias';
@@ -389,19 +349,6 @@
       } else {
         $('milestoneText').textContent = 'Já passamos de todos os marcos, e o melhor ainda vem 💖';
         $('milestoneBar').style.width = '100%';
-      }
-
-      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-      const goalDiff = Math.round((GOAL - today) / 86400000);
-      if (goalDiff > 0) {
-        $('countdownNumber').textContent = goalDiff;
-        $('countdownSub').textContent = `dia${goalDiff === 1 ? '' : 's'} até o nosso dia combinado 🔥`;
-      } else if (goalDiff === 0) {
-        $('countdownNumber').textContent = '🎉';
-        $('countdownSub').textContent = 'é hoje!';
-      } else {
-        $('countdownNumber').textContent = Math.abs(goalDiff);
-        $('countdownSub').textContent = `dia${Math.abs(goalDiff) === 1 ? '' : 's'} desde o nosso dia combinado`;
       }
     }
 
